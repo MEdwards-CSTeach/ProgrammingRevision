@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Quest: 2.2.1 Programming Revision</title>
+<!--
+  CODE QUEST: OCR H446 2.2.1 Programming Techniques revision game
+  ---------------------------------------------------------------
+  * One self-contained file. No internet connection or server code needed.
+    Upload it to any web space (school VLE, Google Sites embed, GitHub Pages,
+    SharePoint) or open it straight from a USB stick.
+  * Pseudocode follows the OCR Exam Reference Language style used in H446.
+  * To add your own questions, scroll to the QUESTIONS list in the script
+    block marked id="question-bank" and copy an existing entry.
+      type:   "mc"   multiple choice (answer = index of correct option, starting at 0)
+              "text" typed answer (answer = list of accepted answers, not case sensitive)
+      level:  1 = Year 12 core, 2 = Year 13 challenge
+      topic:  basics, io, selection, iteration, nesting, arrays, subroutines
+      hints:  up to three hints, from gentle to very strong
+-->
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1b1d21;
+    --muted: #4a5160;
+    --primary: #1565d8;
+    --primary-dark: #0d47a1;
+    --primary-soft: #e8f0fd;
+    --good: #137a3d;
+    --good-bg: #e3f6ea;
+    --bad: #c0282d;
+    --bad-bg: #fdeceb;
+    --hint: #b26a00;
+    --hint-bg: #fff4d1;
+    --hint-line: #f5b400;
+    --line: #d4d9e2;
+    --soft: #f4f6fa;
+    --code-bg: #f6f8fb;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 22px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Arial, Calibri, "Helvetica Neue", sans-serif;
+    line-height: 1.5;
+  }
+  header.site {
+    background: var(--primary);
+    color: #fff;
+    padding: 0.7rem 1rem;
+  }
+  header.site .inner {
+    max-width: 1050px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  header.site h1 { margin: 0; font-size: 1.35rem; }
+  header.site .sub { font-size: 0.85rem; opacity: 0.95; }
+  main { max-width: 1050px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  h2 { font-size: 1.4rem; margin: 0.4rem 0 0.8rem; }
+  h3 { font-size: 1.1rem; margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.4rem 0 0.8rem; }
+
+  .panel {
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    background: #fff;
+  }
+  .panel.soft { background: var(--soft); border-color: var(--soft); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 760px) {
+    html { font-size: 19px; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+
+  label.choice {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.35rem 0.5rem; border-radius: 8px; cursor: pointer;
+  }
+  label.choice:hover { background: var(--primary-soft); }
+  input[type=radio], input[type=checkbox] { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); }
+  select, input[type=text] {
+    font: inherit; font-size: 1rem;
+    padding: 0.45rem 0.6rem;
+    border: 2px solid var(--line); border-radius: 10px;
+    background: #fff; color: var(--ink);
+  }
+  select:focus, input[type=text]:focus { outline: 3px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+  .field { margin-bottom: 0.9rem; }
+  .field > .lbl { display: block; font-weight: bold; margin-bottom: 0.3rem; }
+  .team-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
+  .team-names input { width: 100%; }
+
+  button {
+    font: inherit; font-size: 1rem; font-weight: bold;
+    border: none; border-radius: 12px;
+    padding: 0.65rem 1.2rem; cursor: pointer;
+    background: var(--primary); color: #fff;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:focus-visible { outline: 3px solid #ffb300; outline-offset: 2px; }
+  button.secondary { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  button.secondary:hover { background: var(--primary-soft); }
+  button.hintbtn { background: var(--hint-bg); color: #6b4300; border: 2px solid var(--hint-line); }
+  button.hintbtn:hover { background: #ffeaa6; }
+  button.small { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btnrow { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+  .big-start { font-size: 1.2rem; padding: 0.8rem 2rem; }
+
+  /* Game screen */
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .progress-text { font-weight: bold; color: var(--muted); }
+  .bar { height: 12px; background: var(--soft); border-radius: 99px; overflow: hidden; margin-bottom: 1rem; }
+  .bar > div { height: 100%; background: var(--primary); width: 0; transition: width 0.3s; }
+  .scoreboard { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .scorechip {
+    border: 2px solid var(--line); border-radius: 99px;
+    padding: 0.2rem 0.8rem; font-size: 0.85rem; font-weight: bold; background: #fff;
+  }
+  .scorechip.turn { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-dark); }
+  .turn-banner {
+    background: var(--primary-soft); color: var(--primary-dark);
+    font-weight: bold; font-size: 1.1rem;
+    border-radius: 12px; padding: 0.5rem 1rem; margin-bottom: 0.8rem;
+  }
+  .tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .tag { font-size: 0.75rem; font-weight: bold; padding: 0.15rem 0.65rem; border-radius: 99px; background: var(--soft); color: var(--muted); }
+  .tag.l1 { background: #e6f4ff; color: #0b4f8a; }
+  .tag.l2 { background: #f1e8ff; color: #5a2a9c; }
+  .worth {
+    margin-left: auto; font-weight: bold; font-size: 1rem;
+    background: var(--good-bg); color: var(--good);
+    padding: 0.2rem 0.9rem; border-radius: 99px;
+  }
+  .prompt { font-size: 1.2rem; font-weight: bold; margin: 0.3rem 0 0.8rem; }
+  pre.code {
+    background: var(--code-bg); border: 2px solid var(--line); border-left: 6px solid var(--primary);
+    border-radius: 10px; padding: 0.8rem 1rem; overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace; font-size: 1rem; line-height: 1.45;
+    margin: 0 0 1rem;
+  }
+  code { font-family: Consolas, "Courier New", monospace; background: var(--code-bg); padding: 0 0.25rem; border-radius: 4px; font-size: 0.95em; }
+  .kw { color: #0d47a1; font-weight: bold; }
+  .bi { color: #6a1b9a; }
+  .str { color: #137a3d; }
+  .num { color: #b34700; }
+  .cmt { color: #6b7280; font-style: italic; }
+
+  .options { display: grid; gap: 0.6rem; }
+  .opt {
+    display: flex; gap: 0.8rem; align-items: flex-start; text-align: left;
+    background: #fff; color: var(--ink); border: 2px solid var(--line);
+    font-weight: normal; padding: 0.7rem 1rem;
+  }
+  .opt:hover { background: var(--primary-soft); border-color: var(--primary); }
+  .opt .letter {
+    flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+    background: var(--soft); color: var(--muted); font-weight: bold;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;
+  }
+  .opt.selected { border-color: var(--primary); background: var(--primary-soft); }
+  .opt.selected .letter { background: var(--primary); color: #fff; }
+  .opt.correct { border-color: var(--good); background: var(--good-bg); }
+  .opt.correct .letter { background: var(--good); color: #fff; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong .letter { background: var(--bad); color: #fff; }
+  .opt:disabled { opacity: 1; cursor: default; }
+  .text-answer { width: 100%; font-size: 1.15rem; padding: 0.6rem 0.8rem; font-family: Consolas, "Courier New", monospace; }
+
+  .hints { margin-top: 1rem; display: grid; gap: 0.5rem; }
+  .hint {
+    background: var(--hint-bg); border-left: 6px solid var(--hint-line);
+    border-radius: 8px; padding: 0.5rem 0.9rem;
+  }
+  .hint b { color: var(--hint); }
+  .feedback { margin-top: 1rem; border-radius: 12px; padding: 0.8rem 1.1rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--good-bg); border: 2px solid var(--good); }
+  .feedback.bad { background: var(--bad-bg); border: 2px solid var(--bad); }
+  .feedback.retry { background: var(--hint-bg); border: 2px solid var(--hint-line); }
+  .feedback .head { font-weight: bold; font-size: 1.15rem; margin-bottom: 0.3rem; }
+  .keys { font-size: 0.75rem; color: var(--muted); margin-top: 0.8rem; }
+
+  /* Results */
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); }
+  .bigscore { font-size: 2.6rem; font-weight: bold; color: var(--primary); line-height: 1.1; }
+  .podium li { font-size: 1.15rem; margin-bottom: 0.3rem; }
+  .meter { height: 10px; background: var(--soft); border-radius: 99px; overflow: hidden; min-width: 120px; }
+  .meter > div { height: 100%; background: var(--good); }
+  .review-item { border-top: 1px solid var(--line); padding: 0.8rem 0; }
+  .ok { color: var(--good); font-weight: bold; }
+  .no { color: var(--bad); font-weight: bold; }
+
+  /* Glossary */
+  .gloss-search { width: 100%; margin-bottom: 1rem; }
+  .gloss-group h3 { color: var(--primary-dark); border-bottom: 3px solid var(--primary-soft); padding-bottom: 0.2rem; }
+  dl.gloss dt { font-weight: bold; margin-top: 0.8rem; }
+  dl.gloss dd { margin: 0.15rem 0 0 0; }
+  dl.gloss dd .prac { display: block; color: var(--muted); font-size: 0.92rem; margin-top: 0.15rem; }
+  details summary { cursor: pointer; font-weight: bold; }
+
+  @media print {
+    header.site, .btnrow, .noprint { display: none !important; }
+    html { font-size: 14px; }
+    .panel { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <div>
+      <h1>Code Quest</h1>
+      <div class="sub">OCR A Level Computer Science H446 &middot; 2.2.1 Programming techniques</div>
+    </div>
+    <button class="secondary small noprint" id="btnHome" style="background:#fff">Menu</button>
+  </div>
+</header>
+
+<main>
+<!-- ============ START SCREEN ============ -->
+<section class="screen active" id="screen-start">
+  <h2>Programming revision challenge</h2>
+  <p>Answer questions on variables, constants, casting, input and output, calculations, selection, loops, nesting, arrays and sub-routines. Every question starts with a set number of points. Each hint you use removes points from that question, so only use them when you need to.</p>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="field">
+        <span class="lbl">1. Choose the level</span>
+        <label class="choice"><input type="radio" name="level" value="1" checked> Year 12: core questions (10 points each)</label>
+        <label class="choice"><input type="radio" name="level" value="2"> Year 13: challenge questions (15 points each)</label>
+        <label class="choice"><input type="radio" name="level" value="mix"> Mixed: core and challenge</label>
+      </div>
+      <div class="field">
+        <span class="lbl">2. Choose the topics</span>
+        <div id="topicList"></div>
+        <div class="btnrow" style="margin-top:0.4rem">
+          <button class="secondary small" id="btnAllTopics" type="button">Select all</button>
+          <button class="secondary small" id="btnNoTopics" type="button">Clear all</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label class="lbl" for="numQ">3. Number of questions</label>
+        <select id="numQ">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="all">All available</option>
+        </select>
+        <div id="poolInfo" style="font-size:0.85rem;color:var(--muted);margin-top:0.3rem"></div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="numTeams">4. Players or teams</label>
+        <select id="numTeams">
+          <option value="1" selected>1 (individual or whole class together)</option>
+          <option value="2">2 teams</option>
+          <option value="3">3 teams</option>
+          <option value="4">4 teams</option>
+          <option value="5">5 teams</option>
+          <option value="6">6 teams</option>
+          <option value="7">7 teams</option>
+          <option value="8">8 teams</option>
+        </select>
+        <div class="team-names" id="teamNames"></div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="hintCost">5. Points removed for each hint</label>
+        <select id="hintCost">
+          <option value="1">1 point</option>
+          <option value="2" selected>2 points</option>
+          <option value="3">3 points</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="choice" style="padding-left:0"><input type="checkbox" id="secondTry" checked> Allow a second attempt (for half the points left)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btnrow">
+    <button class="big-start" id="btnStart">Start the game</button>
+    <button class="secondary" id="btnGlossary">Key terms</button>
+  </div>
+
+  <div class="panel soft" style="margin-top:1.4rem">
+    <details>
+      <summary>How to play and teacher notes</summary>
+      <ul>
+        <li>Read the question and any code carefully. Code is written in OCR Exam Reference Language.</li>
+        <li>Press <b>Show hint</b> if you are stuck. The points for that question go down straight away.</li>
+        <li>For typed answers, capital letters do not matter. You do not need to type speech marks.</li>
+        <li>With teams, questions take turns between teams. The team whose turn it is answers.</li>
+        <li>Keyboard: <b>1 to 4</b> picks an option, <b>Enter</b> checks or moves on, <b>H</b> shows a hint.</li>
+        <li>Teachers: the whole game is one file and works offline. Your settings are remembered on this device. New questions can be added to the question bank inside the file (instructions are at the top of the file).</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- ============ GAME SCREEN ============ -->
+<section class="screen" id="screen-game">
+  <div class="topbar">
+    <div class="progress-text" id="progressText">Question 1 of 10</div>
+    <div class="scoreboard" id="scoreboard"></div>
+  </div>
+  <div class="bar"><div id="progressBar"></div></div>
+  <div class="turn-banner" id="turnBanner" style="display:none"></div>
+
+  <div class="panel" id="qCard">
+    <div class="tags" id="qTags"></div>
+    <div class="prompt" id="qPrompt"></div>
+    <pre class="code" id="qCode"></pre>
+    <div id="qAnswer"></div>
+    <div class="hints" id="qHints" aria-live="polite"></div>
+    <div class="feedback" id="qFeedback" aria-live="polite"></div>
+    <div class="btnrow">
+      <button class="hintbtn" id="btnHint">Show hint</button>
+      <button id="btnCheck">Check answer</button>
+      <button id="btnNext" style="display:none">Next question</button>
+    </div>
+    <div class="keys">Keys: 1 to 4 choose &middot; Enter check or next &middot; H hint</div>
+  </div>
+  <div class="btnrow"><button class="secondary small" id="btnQuit">End game early</button></div>
+</section>
+
+<!-- ============ RESULTS SCREEN ============ -->
+<section class="screen" id="screen-end">
+  <h2>Results</h2>
+  <div class="grid2">
+    <div class="panel" id="endSummary"></div>
+    <div class="panel" id="endTeams"></div>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Score by topic</h3>
+    <div id="endTopics"></div>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Review: questions to revisit</h3>
+    <div id="endReview"></div>
+  </div>
+  <div class="btnrow">
+    <button id="btnAgain">Play again with same settings</button>
+    <button class="secondary" id="btnMenu">Change settings</button>
+    <button class="secondary" id="btnPrint">Print or save results</button>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY SCREEN ============ -->
+<section class="screen" id="screen-glossary">
+  <h2>Key terms for 2.2.1</h2>
+  <p>Each term has a definition and an example of what it means in practice.</p>
+  <input type="text" class="gloss-search" id="glossSearch" placeholder="Search key terms..." aria-label="Search key terms">
+  <div id="glossBody"></div>
+  <div class="btnrow"><button id="btnGlossBack">Back to menu</button></div>
+</section>
+</main>
+
+<!-- ============ QUESTION BANK ============ -->
+<script id="question-bank">
+const TOPICS = [
+  { id: "basics",      name: "Variables, constants and casting" },
+  { id: "io",          name: "Input, output and calculations" },
+  { id: "selection",   name: "Selection and conditions" },
+  { id: "iteration",   name: "Iteration (FOR, WHILE, DO UNTIL)" },
+  { id: "nesting",     name: "Nested loops and selection" },
+  { id: "arrays",      name: "Arrays and indexes" },
+  { id: "subroutines", name: "Sub-routines, parameters and return values" }
+];
+
+const QUESTIONS = [
+/* ---------- VARIABLES, CONSTANTS AND CASTING ---------- */
+{ topic: "basics", level: 1, type: "mc",
+  q: "What is a variable?",
+  options: [
+    "A named location in memory that holds a value which can change while the program runs",
+    "A value that can never change while the program runs",
+    "A sub-routine that always returns a value",
+    "A type of loop that repeats a set number of times"],
+  answer: 0,
+  hints: ["Think about the word 'vary'.", "It is stored in memory and is given a name called an identifier.", "Its value can be changed by assignment while the program is running."],
+  explain: "A variable is a named memory location. In practice, <code>score = score + 1</code> changes the value stored under the identifier <code>score</code>." },
+
+{ topic: "basics", level: 1, type: "mc",
+  q: "What is a constant?",
+  options: [
+    "A value typed in by the user",
+    "A named value that cannot be changed while the program is running",
+    "A variable declared inside a function",
+    "Any value with the Boolean data type"],
+  answer: 1,
+  hints: ["Think of the everyday meaning of 'constant'.", "It has a name, just like a variable.", "Once the program starts, its value stays the same."],
+  explain: "A constant is a named value that stays the same during execution, for example <code>const VAT = 0.2</code>. It can only be changed by editing the source code." },
+
+{ topic: "basics", level: 1, type: "mc",
+  q: "Which data type is the most suitable for storing the phone number 07700 900123?",
+  options: ["Integer", "Real", "String", "Boolean"],
+  answer: 2,
+  hints: ["Would you ever do arithmetic on a phone number?", "What would happen to the leading 0 if it were stored as a number?", "It also contains a space, which is a character."],
+  explain: "String. Phone numbers are not used in calculations, can start with 0 and may contain spaces. An integer would lose the leading zero." },
+
+{ topic: "basics", level: 1, type: "mc",
+  q: "Which data type is the most suitable for storing the value 3.75?",
+  options: ["Integer", "Real (float)", "Character", "Boolean"],
+  answer: 1,
+  hints: ["Look at the decimal point.", "Integers are whole numbers only.", "The data type for numbers with a fractional part is called real or float."],
+  explain: "Real (also called float) stores numbers with a fractional part, such as prices or measurements." },
+
+{ topic: "basics", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = "5"\ny = "3"\nprint(x + y)`,
+  answer: ["53"],
+  hints: ["Look carefully at the speech marks around 5 and 3.", "x and y are strings, not numbers.", "Using + on two strings joins them together (concatenation)."],
+  explain: "Output is <code>53</code>. Both values are strings, so + concatenates them rather than adding them." },
+
+{ topic: "basics", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = "5"\ny = int(x) + 3\nprint(y)`,
+  answer: ["8"],
+  hints: ["x starts as a string.", "int() casts the string to an integer.", "So the calculation is 5 + 3."],
+  explain: "Output is <code>8</code>. <code>int(x)</code> casts the string \"5\" to the integer 5 before adding 3." },
+
+{ topic: "basics", level: 1, type: "mc",
+  q: "What is meant by casting?",
+  options: [
+    "Displaying a value on the screen",
+    "Declaring a value that cannot change",
+    "Converting a value from one data type to another",
+    "Rounding a real number to the nearest whole number"],
+  answer: 2,
+  hints: ["Examples are int(), str() and float().", "It is about data types.", "str(42) turns the integer 42 into the string \"42\"."],
+  explain: "Casting converts a value from one data type to another, for example <code>int(\"12\")</code> gives the integer 12." },
+
+{ topic: "basics", level: 1, type: "text",
+  q: "Which OCR pseudocode function casts the integer 42 into the string \"42\"? Type just the function name.",
+  answer: ["str", "str()", "str(42)"],
+  hints: ["The name is a short form of the data type you are converting to.", "It has three letters.", "It is short for 'string'."],
+  explain: "<code>str(42)</code> returns \"42\". This is often needed before concatenating a number with text." },
+
+{ topic: "basics", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 10\nx = x + 5\nx = x * 2\nprint(x)`,
+  answer: ["30"],
+  hints: ["Work through one line at a time.", "After line 2, x is 15.", "Line 3 doubles the current value of x."],
+  explain: "x becomes 10, then 15, then 30. Each assignment replaces the old value of the variable." },
+
+{ topic: "basics", level: 1, type: "mc",
+  q: "Which of these is the best identifier (variable name)?",
+  options: ["<code>2ndScore</code>", "<code>total score</code>", "<code>totalScore</code>", "<code>x</code>"],
+  answer: 2,
+  hints: ["Identifiers cannot contain spaces.", "Identifiers usually cannot start with a digit.", "A good identifier is also meaningful, so it describes the data."],
+  explain: "<code>totalScore</code> is valid and meaningful. <code>2ndScore</code> starts with a digit, <code>total score</code> has a space, and <code>x</code> is valid but tells the reader nothing." },
+
+{ topic: "basics", level: 2, type: "mc",
+  q: "Why is it better to write <code>const VAT = 0.2</code> than to type 0.2 throughout a program?",
+  options: [
+    "The value only needs updating in one place and cannot be changed by mistake while the program runs",
+    "Constants always make a program run faster",
+    "It lets the user change the VAT rate while the program runs",
+    "Constants use no memory at all"],
+  answer: 0,
+  hints: ["Think about what happens when the VAT rate changes.", "How many lines would you need to edit without a constant?", "Also think about accidental changes during execution."],
+  explain: "A constant is changed in one place, which avoids missed edits, and it is protected from being changed while the program runs. A meaningful name such as VAT also makes code easier to read." },
+
+{ topic: "basics", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `a = 7\nb = 2\nprint(str(a / b) + str(a DIV b))`,
+  answer: ["3.53"],
+  hints: ["Work out a / b and a DIV b separately.", "a / b is 3.5 and a DIV b is 3.", "Both are cast to strings, so + joins them."],
+  explain: "<code>str(3.5)</code> is \"3.5\" and <code>str(3)</code> is \"3\". Concatenated, the output is <code>3.53</code>." },
+
+{ topic: "basics", level: 2, type: "mc",
+  q: "What is wrong with this code?",
+  code: `age = input("Enter your age")\nif age > 17 then\n    print("Adult")\nendif`,
+  options: [
+    "input() returns a string, so age should be cast with int() before comparing it with a number",
+    "The condition should use == instead of >",
+    "age is a constant and cannot be compared",
+    "Nothing is wrong"],
+  answer: 0,
+  hints: ["What data type does input() give back?", "You cannot reliably compare text with a number.", "A cast is needed: int(input(...))."],
+  explain: "input() always returns a string. Use <code>age = int(input(\"Enter your age\"))</code> so the comparison works with numbers." },
+
+{ topic: "basics", level: 2, type: "mc",
+  q: "A program contains <code>const MAX_PLAYERS = 4</code>. A later line says <code>MAX_PLAYERS = 5</code>. What happens?",
+  options: [
+    "MAX_PLAYERS becomes 5",
+    "An error occurs because a constant cannot be reassigned",
+    "MAX_PLAYERS becomes 9",
+    "The line is skipped with no error"],
+  answer: 1,
+  hints: ["What is the defining feature of a constant?", "The program is trying to change it while running.", "The translator will refuse this."],
+  explain: "Reassigning a constant causes an error. This protection is one of the reasons for using constants." },
+
+/* ---------- INPUT, OUTPUT AND CALCULATIONS ---------- */
+{ topic: "io", level: 1, type: "text",
+  q: "What is output by <code>print(17 MOD 5)</code>?",
+  answer: ["2"],
+  hints: ["MOD gives the remainder.", "How many whole 5s fit in 17?", "17 = 3 × 5 + ?"],
+  explain: "17 MOD 5 = 2 because 17 = 3 × 5 + 2. MOD is used to test for even numbers or to wrap values around." },
+
+{ topic: "io", level: 1, type: "text",
+  q: "What is output by <code>print(17 DIV 5)</code>?",
+  answer: ["3"],
+  hints: ["DIV is integer division.", "It ignores any remainder.", "How many whole 5s fit into 17?"],
+  explain: "17 DIV 5 = 3. DIV gives the whole number part of a division." },
+
+{ topic: "io", level: 1, type: "text",
+  q: "What is output by <code>print(2 ^ 4)</code>?",
+  answer: ["16"],
+  hints: ["^ means 'to the power of'.", "It is 2 multiplied by itself several times.", "2 × 2 × 2 × 2"],
+  explain: "2 ^ 4 = 16. The ^ operator is exponentiation." },
+
+{ topic: "io", level: 1, type: "mc",
+  q: "What does <code>name = input(\"Enter your name: \")</code> do?",
+  options: [
+    "Prints the value of name",
+    "Displays the prompt, waits for the user to type, then stores what they type in name",
+    "Creates a constant called name",
+    "Checks whether name is valid"],
+  answer: 1,
+  hints: ["There are two parts: the input() call and the assignment.", "The text in brackets is shown to the user first.", "Whatever the user types is stored in the variable on the left."],
+  explain: "input() shows the prompt, waits for the user, and returns what they typed as a string. The = then assigns it to name." },
+
+{ topic: "io", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `name = "Ada"\nprint("Hello " + name + "!")`,
+  answer: ["Hello Ada!", "Hello Ada"],
+  hints: ["+ joins strings together.", "Notice the space inside \"Hello \".", "Put the three pieces together in order."],
+  explain: "Concatenation joins \"Hello \", \"Ada\" and \"!\" to make <code>Hello Ada!</code>." },
+
+{ topic: "io", level: 1, type: "mc",
+  q: "Which operator gives the remainder after division?",
+  options: ["<code>DIV</code>", "<code>MOD</code>", "<code>^</code>", "<code>/</code>"],
+  answer: 1,
+  hints: ["One of them is short for 'modulus'.", "DIV gives the whole number part.", "The answer for 10 ? 3 would be 1."],
+  explain: "MOD (modulus) gives the remainder. DIV gives the whole number of times one number fits into another." },
+
+{ topic: "io", level: 1, type: "text",
+  q: "What is output by <code>print(3 + 4 * 2)</code>?",
+  answer: ["11"],
+  hints: ["Remember BIDMAS.", "Multiplication is done before addition.", "4 * 2 = 8, then add 3."],
+  explain: "Multiplication comes first: 4 × 2 = 8, then 3 + 8 = 11." },
+
+{ topic: "io", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `n = 4729\nprint(n MOD 10)`,
+  answer: ["9"],
+  hints: ["MOD 10 gives the remainder after dividing by 10.", "Dividing by 10 moves the last digit into the remainder.", "Look at the last digit of 4729."],
+  explain: "n MOD 10 gives the last digit of a whole number, so the output is 9." },
+
+{ topic: "io", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `n = 4729\nd = (n DIV 10) MOD 10\nprint(d)`,
+  answer: ["2"],
+  hints: ["Do the brackets first.", "4729 DIV 10 = 472.", "Now find the last digit of 472."],
+  explain: "4729 DIV 10 = 472, and 472 MOD 10 = 2. This picks out the tens digit." },
+
+{ topic: "io", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `seconds = 200\nm = seconds DIV 60\ns = seconds MOD 60\nprint(str(m) + ":" + str(s))`,
+  answer: ["3:20"],
+  hints: ["How many whole minutes are in 200 seconds?", "200 DIV 60 = 3. What is left over?", "200 MOD 60 = 20."],
+  explain: "m = 3 and s = 20, so the output is <code>3:20</code>. DIV and MOD together are a common way to convert units." },
+
+{ topic: "io", level: 2, type: "mc",
+  q: "Which expression is True only when num is even?",
+  options: ["<code>num DIV 2 == 0</code>", "<code>num MOD 2 == 0</code>", "<code>num / 2 == 0</code>", "<code>num MOD 2 == 1</code>"],
+  answer: 1,
+  hints: ["Even numbers divide by 2 with nothing left over.", "Which operator gives what is left over?", "The remainder must be 0."],
+  explain: "<code>num MOD 2 == 0</code> is True when there is no remainder after dividing by 2." },
+
+{ topic: "io", level: 2, type: "text",
+  q: "What is output by <code>print((10 - 4) / 4 * 2)</code>?",
+  answer: ["3", "3.0"],
+  hints: ["Brackets first.", "6 / 4 = 1.5.", "Division and multiplication are done left to right."],
+  explain: "(10 - 4) = 6, then 6 / 4 = 1.5, then 1.5 × 2 = 3." },
+
+{ topic: "io", level: 2, type: "mc",
+  q: "total is the integer 15. Which line correctly outputs <code>Total: 15</code>?",
+  options: [
+    "<code>print(\"Total: \" + str(total))</code>",
+    "<code>print(\"Total: \" + total)</code>",
+    "<code>print(Total: total)</code>",
+    "<code>print(\"Total: \" + int(total))</code>"],
+  answer: 0,
+  hints: ["You cannot concatenate a string and an integer directly.", "One of the values needs casting.", "Cast the number to a string."],
+  explain: "The integer must be cast to a string with str() before it can be concatenated with text." },
+
+/* ---------- SELECTION AND CONDITIONS ---------- */
+{ topic: "selection", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 12\nif x > 10 then\n    print("big")\nelse\n    print("small")\nendif`,
+  answer: ["big"],
+  hints: ["Check the condition x > 10.", "Is 12 greater than 10?", "When the condition is True, the 'then' branch runs."],
+  explain: "12 > 10 is True, so <code>big</code> is printed and the else branch is skipped." },
+
+{ topic: "selection", level: 1, type: "mc",
+  q: "What does the comparison operator <code>!=</code> mean?",
+  options: ["Equal to", "Not equal to", "Assign a value", "Less than or equal to"],
+  answer: 1,
+  hints: ["The ! symbol often means 'not'.", "It is the opposite of ==.", "3 != 4 is True."],
+  explain: "<code>!=</code> means not equal to. <code>==</code> means equal to, and a single <code>=</code> is assignment." },
+
+{ topic: "selection", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `mark = 65\nif mark >= 70 then\n    print("A")\nelseif mark >= 60 then\n    print("B")\nelseif mark >= 50 then\n    print("C")\nelse\n    print("U")\nendif`,
+  answer: ["B"],
+  hints: ["Check each condition from the top.", "65 >= 70 is False.", "Is 65 >= 60?"],
+  explain: "The first True condition is <code>mark >= 60</code>, so B is printed and the rest are skipped." },
+
+{ topic: "selection", level: 1, type: "mc",
+  q: "Which condition is True when age is from 13 to 19 inclusive?",
+  options: [
+    "<code>age >= 13 AND age <= 19</code>",
+    "<code>age > 13 AND age < 19</code>",
+    "<code>age >= 13 OR age <= 19</code>",
+    "<code>age == 13 OR age == 19</code>"],
+  answer: 0,
+  hints: ["Inclusive means 13 and 19 must both count.", "Both limits must be true at the same time.", "Use AND with >= and <=."],
+  explain: "AND requires both parts to be True, and >= and <= include the end values. With OR, every age would pass." },
+
+{ topic: "selection", level: 1, type: "mc",
+  q: "What is selection?",
+  options: [
+    "Running instructions one after another in order",
+    "Repeating a block of code",
+    "Choosing which path through the code to run, based on a condition",
+    "Storing several values under one name"],
+  answer: 2,
+  hints: ["IF statements are an example.", "It involves a decision.", "A condition decides which code is executed."],
+  explain: "Selection uses a condition to decide which code runs, for example IF, ELSEIF, ELSE and SWITCH." },
+
+{ topic: "selection", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `a = True\nb = False\nprint(a AND b)`,
+  answer: ["False"],
+  hints: ["AND needs both sides to be True.", "Is b True?", "If either side is False, AND gives False."],
+  explain: "AND only gives True when both operands are True. b is False, so the output is False." },
+
+{ topic: "selection", level: 1, type: "text",
+  q: "Type the missing operator so that \"Full marks\" is printed only when score is exactly 100.",
+  code: `if score ___ 100 then\n    print("Full marks")\nendif`,
+  answer: ["=="],
+  hints: ["It is a comparison, not an assignment.", "A single = assigns a value.", "Use two equals signs."],
+  explain: "<code>==</code> compares two values. A single <code>=</code> is used for assignment." },
+
+{ topic: "selection", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 5\ny = 8\nif NOT(x > 3 AND y < 6) then\n    print("yes")\nelse\n    print("no")\nendif`,
+  answer: ["yes"],
+  hints: ["Work out the brackets first.", "x > 3 is True, y < 6 is False, so the AND gives False.", "NOT reverses False to True."],
+  explain: "(True AND False) is False, and NOT False is True, so <code>yes</code> is printed." },
+
+{ topic: "selection", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `day = "Sun"\nswitch day:\n    case "Sat":\n        print("Weekend")\n    case "Sun":\n        print("Weekend")\n    default:\n        print("Weekday")\nendswitch`,
+  answer: ["Weekend"],
+  hints: ["SWITCH compares day with each case.", "Which case matches \"Sun\"?", "default only runs when no case matches."],
+  explain: "The case \"Sun\" matches, so Weekend is printed. SWITCH is neat when one variable is checked against many fixed values." },
+
+{ topic: "selection", level: 2, type: "mc",
+  q: "A programmer reorders the grade code so that <code>if mark >= 50</code> is checked first, then <code>elseif mark >= 60</code>, then <code>elseif mark >= 70</code>. What goes wrong?",
+  options: [
+    "Nothing, the order does not matter",
+    "Any mark of 50 or more would get the lowest grade, so 85 would get C",
+    "Marks below 50 would cause an error",
+    "Every mark would get grade A"],
+  answer: 1,
+  hints: ["Only the first True branch runs.", "Is 85 >= 50?", "Once a branch runs, the later ones are skipped."],
+  explain: "IF and ELSEIF stop at the first True condition. Checking >= 50 first catches every pass mark, so the higher grades can never be reached." },
+
+{ topic: "selection", level: 2, type: "mc",
+  q: "Which values of x make <code>x < 0 OR x > 100</code> True?",
+  options: ["-5 and 150", "0 and 100", "50 only", "No value of x"],
+  answer: 0,
+  hints: ["OR needs at least one side to be True.", "Test each value against both sides.", "0 and 100 are not less than 0 or more than 100."],
+  explain: "-5 is less than 0 and 150 is more than 100. This kind of condition is used to reject out of range input in validation." },
+
+/* ---------- ITERATION ---------- */
+{ topic: "iteration", level: 1, type: "text",
+  q: "How many lines of output does this code produce?",
+  code: `for i = 1 to 5\n    print(i)\nnext i`,
+  answer: ["5", "five"],
+  hints: ["In OCR pseudocode the end value is included.", "i takes the values 1, 2, 3...", "Count from 1 to 5."],
+  explain: "i takes the values 1 to 5 inclusive, so 5 lines are printed." },
+
+{ topic: "iteration", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `total = 0\nfor i = 1 to 4\n    total = total + i\nnext i\nprint(total)`,
+  answer: ["10"],
+  hints: ["Add each value of i to total.", "i goes 1, 2, 3, 4.", "1 + 2 + 3 + 4"],
+  explain: "total builds up as 1, 3, 6, 10. This is called a running total." },
+
+{ topic: "iteration", level: 1, type: "mc",
+  q: "Which type of loop is count-controlled?",
+  options: ["FOR", "WHILE", "DO ... UNTIL", "IF"],
+  answer: 0,
+  hints: ["Count-controlled means you know how many times it will repeat.", "It uses a counter variable with a start and end value.", "for i = 1 to 10"],
+  explain: "A FOR loop repeats a fixed number of times. WHILE and DO UNTIL are condition-controlled." },
+
+{ topic: "iteration", level: 1, type: "mc",
+  q: "What is the key difference between WHILE and DO ... UNTIL (repeat until)?",
+  options: [
+    "WHILE checks the condition at the start, so it may run zero times. DO UNTIL checks at the end, so it always runs at least once.",
+    "WHILE always runs at least once. DO UNTIL may run zero times.",
+    "WHILE is count-controlled and DO UNTIL is condition-controlled.",
+    "There is no difference."],
+  answer: 0,
+  hints: ["Look at where the condition is written in each loop.", "WHILE has its condition at the top.", "DO UNTIL has its condition at the bottom, after the body."],
+  explain: "WHILE is pre-condition, so it may never run. DO UNTIL is post-condition, so the body runs at least once." },
+
+{ topic: "iteration", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 1\nwhile x < 20\n    x = x * 2\nendwhile\nprint(x)`,
+  answer: ["32"],
+  hints: ["Trace x: 1, 2, 4...", "The loop checks x < 20 before each pass.", "When x is 16 the loop runs once more."],
+  explain: "x goes 1, 2, 4, 8, 16, 32. At 32 the condition x < 20 is False, so the loop stops and 32 is printed." },
+
+{ topic: "iteration", level: 1, type: "mc",
+  q: "What is iteration?",
+  options: [
+    "Making a decision",
+    "Repeating a block of code",
+    "Converting one data type to another",
+    "Splitting a program into sub-routines"],
+  answer: 1,
+  hints: ["Another word for it is looping.", "FOR and WHILE are examples.", "The same instructions are carried out again."],
+  explain: "Iteration means repeating code, either a set number of times (count-controlled) or until a condition is met (condition-controlled)." },
+
+{ topic: "iteration", level: 1, type: "mc",
+  q: "Which loop is the best choice for 'keep asking for the password until it is correct'?",
+  options: [
+    "A FOR loop from 1 to 10",
+    "A condition-controlled loop such as WHILE or DO UNTIL",
+    "An IF statement",
+    "A SWITCH statement"],
+  answer: 1,
+  hints: ["Do you know how many attempts it will take?", "The loop needs to stop when something becomes true.", "That is condition-controlled iteration."],
+  explain: "The number of attempts is unknown, so a condition-controlled loop is used. DO UNTIL suits it well because the user must be asked at least once." },
+
+{ topic: "iteration", level: 1, type: "text",
+  q: "Type the keyword that closes this loop.",
+  code: `while x < 10\n    x = x + 1\n___`,
+  answer: ["endwhile"],
+  hints: ["OCR pseudocode closes blocks with 'end' plus the keyword.", "IF is closed by endif.", "What closes while?"],
+  explain: "A WHILE loop is closed with <code>endwhile</code>." },
+
+{ topic: "iteration", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `count = 0\nfor i = 0 to 20 step 5\n    count = count + 1\nnext i\nprint(count)`,
+  answer: ["5", "five"],
+  hints: ["step 5 means i goes up by 5 each time.", "List the values of i up to and including 20.", "0, 5, 10, 15, 20"],
+  explain: "i takes 0, 5, 10, 15 and 20, so the loop runs 5 times." },
+
+{ topic: "iteration", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 10\ndo\n    x = x + 1\nuntil x > 5\nprint(x)`,
+  answer: ["11"],
+  hints: ["DO UNTIL runs the body before checking.", "After one pass x is 11.", "Is 11 > 5?"],
+  explain: "The body runs once (x = 11), then the condition is True so the loop ends. This shows that DO UNTIL always runs at least once." },
+
+{ topic: "iteration", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 10\nwhile x < 5\n    x = x + 1\nendwhile\nprint(x)`,
+  answer: ["10"],
+  hints: ["WHILE checks the condition before the body.", "Is 10 < 5?", "If the condition starts False, the body never runs."],
+  explain: "10 < 5 is False at the start, so the body is skipped and 10 is printed. Compare this with the DO UNTIL question." },
+
+{ topic: "iteration", level: 2, type: "mc",
+  q: "What is the problem with this code?",
+  code: `n = 1\nwhile n != 10\n    n = n + 2\nendwhile`,
+  options: [
+    "It is an infinite loop because n is always odd and never equals 10",
+    "It runs exactly 5 times",
+    "It never runs",
+    "It causes a casting error"],
+  answer: 0,
+  hints: ["Trace n: 1, 3, 5...", "Will n ever be exactly 10?", "An odd number plus 2 is always odd."],
+  explain: "n goes 1, 3, 5, 7, 9, 11... and skips 10, so the condition never becomes False. Using <code>n < 10</code> would be safer." },
+
+{ topic: "iteration", level: 2, type: "text",
+  q: "Type every number output, in order, separated by spaces.",
+  code: `for i = 10 to 1 step -3\n    print(i)\nnext i`,
+  answer: ["10 7 4 1"],
+  hints: ["step -3 means count down by 3.", "Start at 10.", "Stop when the next value would go below 1."],
+  explain: "i takes 10, 7, 4, 1. The next value, -2, is past the end value so the loop stops." },
+
+/* ---------- NESTING ---------- */
+{ topic: "nesting", level: 1, type: "text",
+  q: "How many stars are printed?",
+  code: `for i = 1 to 3\n    for j = 1 to 4\n        print("*")\n    next j\nnext i`,
+  answer: ["12", "twelve"],
+  hints: ["The inner loop runs completely for each pass of the outer loop.", "The inner loop prints 4 stars each time.", "The outer loop runs 3 times."],
+  explain: "3 outer passes × 4 inner passes = 12 stars." },
+
+{ topic: "nesting", level: 1, type: "mc",
+  q: "What does nesting mean in programming?",
+  options: [
+    "Putting one programming construct inside another, such as a loop inside a loop",
+    "Joining two strings together",
+    "Calling a sub-routine",
+    "Storing data in an array"],
+  answer: 0,
+  hints: ["Think of a bird's nest or Russian dolls.", "One structure sits inside another.", "An IF inside a FOR loop is an example."],
+  explain: "Nesting means placing one construct inside another, for example an IF inside a loop, or a loop inside a loop." },
+
+{ topic: "nesting", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `x = 7\nif x > 5 then\n    if x MOD 2 == 0 then\n        print("big even")\n    else\n        print("big odd")\n    endif\nelse\n    print("small")\nendif`,
+  answer: ["big odd"],
+  hints: ["Check the outer IF first.", "7 > 5 is True, so go inside.", "7 MOD 2 is 1, not 0."],
+  explain: "The outer condition is True, then 7 MOD 2 is 1 so the inner else runs: <code>big odd</code>." },
+
+{ topic: "nesting", level: 1, type: "text",
+  q: "Type every number output, in order, separated by spaces.",
+  code: `for i = 1 to 5\n    if i MOD 2 == 0 then\n        print(i)\n    endif\nnext i`,
+  answer: ["2 4"],
+  hints: ["The IF runs on every pass of the loop.", "Only even values of i are printed.", "Which numbers from 1 to 5 are even?"],
+  explain: "Only 2 and 4 have no remainder when divided by 2." },
+
+{ topic: "nesting", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `count = 0\nfor i = 1 to 4\n    for j = 1 to i\n        count = count + 1\n    next j\nnext i\nprint(count)`,
+  answer: ["10"],
+  hints: ["The inner loop's end value changes each time.", "When i = 1 the inner loop runs once, when i = 2 twice...", "1 + 2 + 3 + 4"],
+  explain: "The inner loop runs 1, 2, 3 then 4 times, giving 10 in total." },
+
+{ topic: "nesting", level: 2, type: "text",
+  q: "What is the last line printed?",
+  code: `for i = 1 to 3\n    line = ""\n    for j = 1 to i\n        line = line + str(j)\n    next j\n    print(line)\nnext i`,
+  answer: ["123"],
+  hints: ["line is reset to empty at the start of each outer pass.", "The digits are joined as strings, not added.", "On the last pass i is 3."],
+  explain: "The output is 1, then 12, then 123. The last line is <code>123</code>." },
+
+{ topic: "nesting", level: 2, type: "mc",
+  q: "An outer loop runs n times and an inner loop inside it also runs n times. How many times does the inner body run in total?",
+  options: ["n", "2n", "n²", "n + 1"],
+  answer: 2,
+  hints: ["Try it with n = 3.", "The inner loop runs n times for each of the n outer passes.", "n × n"],
+  explain: "n × n = n². This is why nested loops can make a program much slower as n grows." },
+
+{ topic: "nesting", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `total = 0\nfor i = 1 to 3\n    for j = 1 to 3\n        if i == j then\n            total = total + i\n        endif\n    next j\nnext i\nprint(total)`,
+  answer: ["6"],
+  hints: ["The IF is only True when i and j are the same.", "That happens for (1,1), (2,2) and (3,3).", "Add up the values of i in those cases."],
+  explain: "total = 1 + 2 + 3 = 6. This pattern picks out the diagonal of a grid." },
+
+/* ---------- ARRAYS ---------- */
+{ topic: "arrays", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `array colours[4]\ncolours[0] = "red"\ncolours[1] = "blue"\ncolours[2] = "green"\ncolours[3] = "pink"\nprint(colours[2])`,
+  answer: ["green"],
+  hints: ["Array indexes start at 0.", "colours[0] is the first item.", "Count 0, 1, 2."],
+  explain: "Index 2 is the third item, <code>green</code>, because indexing starts at 0." },
+
+{ topic: "arrays", level: 1, type: "mc",
+  q: "An array is declared as <code>array scores[10]</code>. What are its valid indexes?",
+  options: ["1 to 10", "0 to 9", "0 to 10", "1 to 9"],
+  answer: 1,
+  hints: ["There are 10 elements.", "The first index is 0.", "The last index is always one less than the size."],
+  explain: "Ten elements are indexed 0 to 9. Using index 10 would cause an 'index out of range' error." },
+
+{ topic: "arrays", level: 1, type: "mc",
+  q: "What is an array?",
+  options: [
+    "A data structure that stores several items of the same data type under one identifier, each accessed by an index",
+    "A loop that repeats a fixed number of times",
+    "A single value that cannot change",
+    "A sub-routine that returns a list"],
+  answer: 0,
+  hints: ["It is a data structure.", "It holds more than one value.", "Each value is found using its position number."],
+  explain: "An array stores multiple values of the same type under one name. Items are accessed by index, such as <code>scores[3]</code>." },
+
+{ topic: "arrays", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `array nums = [4, 8, 15, 16, 23]\nprint(nums[1] + nums[3])`,
+  answer: ["24"],
+  hints: ["nums[0] is 4.", "nums[1] is 8. What is nums[3]?", "8 + 16"],
+  explain: "nums[1] is 8 and nums[3] is 16, so 24 is printed." },
+
+{ topic: "arrays", level: 1, type: "mc",
+  q: "An array called colours holds 4 items. What happens if the program tries to use <code>colours[4]</code>?",
+  options: [
+    "It returns the last item",
+    "It causes an 'index out of range' error",
+    "It returns the first item",
+    "It adds a fifth item automatically"],
+  answer: 1,
+  hints: ["What are the valid indexes for 4 items?", "They are 0, 1, 2 and 3.", "Index 4 does not exist."],
+  explain: "Indexes 0 to 3 are valid. Index 4 is outside the array, so an index out of range error occurs." },
+
+{ topic: "arrays", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `array nums = [3, 6, 9]\ntotal = 0\nfor i = 0 to 2\n    total = total + nums[i]\nnext i\nprint(total)`,
+  answer: ["18"],
+  hints: ["The loop visits each index from 0 to 2.", "It adds each element to total.", "3 + 6 + 9"],
+  explain: "The loop uses i as the index to add every element: 3 + 6 + 9 = 18." },
+
+{ topic: "arrays", level: 1, type: "text",
+  q: "An array called marks has 8 elements. What number should replace the gap so the loop visits every element exactly once?",
+  code: `for i = 0 to ___\n    print(marks[i])\nnext i`,
+  answer: ["7"],
+  hints: ["The first index is 0.", "The last index is one less than the size.", "8 - 1"],
+  explain: "With 8 elements the indexes are 0 to 7. Writing <code>marks.length - 1</code> would also work and adapts to any size." },
+
+{ topic: "arrays", level: 2, type: "text",
+  q: "Assume the 2D array is accessed as grid[row, column]. What is output?",
+  code: `grid = [[1, 2, 3],\n        [4, 5, 6],\n        [7, 8, 9]]\nprint(grid[2, 0])`,
+  answer: ["7"],
+  hints: ["Rows and columns both start at 0.", "Row 2 is the third row: 7, 8, 9.", "Column 0 is the first item in that row."],
+  explain: "Row 2 is [7, 8, 9] and column 0 is 7. Always check which index means row and which means column." },
+
+{ topic: "arrays", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `array nums = [5, 2, 9, 1]\nbiggest = nums[0]\nfor i = 1 to nums.length - 1\n    if nums[i] > biggest then\n        biggest = nums[i]\n    endif\nnext i\nprint(biggest)`,
+  answer: ["9"],
+  hints: ["biggest starts as the first element.", "Each element is compared with biggest.", "biggest is replaced whenever a larger value is found."],
+  explain: "This is the standard 'find the maximum' algorithm. biggest goes 5, 5, 9, 9, so 9 is printed." },
+
+{ topic: "arrays", level: 2, type: "mc",
+  q: "names holds 5 items. What is wrong with <code>for i = 0 to names.length</code>?",
+  options: [
+    "Nothing, it visits every item",
+    "It goes one too far and tries to access names[5], which is out of range",
+    "It misses the first item",
+    "length cannot be used with arrays"],
+  answer: 1,
+  hints: ["names.length is 5.", "In OCR pseudocode the end value is included.", "What is the last valid index?"],
+  explain: "The loop runs i = 0 to 5, but the last valid index is 4. This is an 'off by one' error. Use <code>names.length - 1</code>." },
+
+{ topic: "arrays", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `array nums = [1, 2, 3, 4]\nfor i = 0 to 3\n    nums[i] = nums[i] * 2\nnext i\nprint(nums[3])`,
+  answer: ["8"],
+  hints: ["The loop changes each element in place.", "Every value is doubled.", "nums[3] started as 4."],
+  explain: "Each element is doubled, giving [2, 4, 6, 8], so nums[3] is 8." },
+
+{ topic: "arrays", level: 2, type: "mc",
+  q: "Why are arrays often described as a static data structure?",
+  options: [
+    "Their size is fixed when they are declared",
+    "Their values can never be changed",
+    "They can only store numbers",
+    "They are stored on the hard drive"],
+  answer: 0,
+  hints: ["Static is the opposite of dynamic.", "It is about size, not contents.", "array scores[10] always has 10 elements."],
+  explain: "A static structure has a fixed size set at declaration. The values inside can still be changed." },
+
+/* ---------- SUB-ROUTINES ---------- */
+{ topic: "subroutines", level: 1, type: "mc",
+  q: "What is the main difference between a function and a procedure?",
+  options: [
+    "A function returns a value. A procedure does not.",
+    "A procedure returns a value. A function does not.",
+    "Functions cannot take parameters.",
+    "Procedures can only be called once."],
+  answer: 0,
+  hints: ["Look for the keyword return.", "Which one sends a value back to where it was called?", "You can write x = function(), but a procedure is just called on its own line."],
+  explain: "A function returns a value that can be used in an expression. A procedure carries out a task but does not return a value." },
+
+{ topic: "subroutines", level: 1, type: "mc",
+  q: "In <code>function area(w, h)</code>, what are w and h called?",
+  options: ["Arguments", "Parameters", "Constants", "Return values"],
+  answer: 1,
+  hints: ["They appear in the definition of the sub-routine.", "They act as placeholders for the data passed in.", "Arguments are the actual values in the call."],
+  explain: "w and h are parameters: the variables listed in the sub-routine's definition." },
+
+{ topic: "subroutines", level: 1, type: "mc",
+  q: "In <code>a = area(4, 5)</code>, what are 4 and 5 called?",
+  options: ["Parameters", "Arguments", "Identifiers", "Local variables"],
+  answer: 1,
+  hints: ["These are the actual values sent in.", "They appear in the call, not the definition.", "Parameters receive them."],
+  explain: "4 and 5 are arguments: the actual values passed when the sub-routine is called. They are copied into the parameters." },
+
+{ topic: "subroutines", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `function double(n)\n    return n * 2\nendfunction\n\nprint(double(7))`,
+  answer: ["14"],
+  hints: ["The argument 7 is passed into n.", "The function returns n * 2.", "print outputs the returned value."],
+  explain: "double(7) returns 14, which is then printed." },
+
+{ topic: "subroutines", level: 1, type: "mc",
+  q: "Which of these is an advantage of using sub-routines?",
+  options: [
+    "Code can be reused and each part can be tested separately",
+    "Programs no longer need variables",
+    "Programs always use less memory",
+    "Loops are no longer needed"],
+  answer: 0,
+  hints: ["Think about writing code once and calling it many times.", "Think about finding errors.", "Think about splitting work between programmers."],
+  explain: "Sub-routines avoid repeated code, can be tested on their own, make programs easier to read and maintain, and let a team work on different parts." },
+
+{ topic: "subroutines", level: 1, type: "text",
+  q: "What is output when this code runs?",
+  code: `procedure greet(name)\n    print("Hi " + name)\nendprocedure\n\ngreet("Sam")`,
+  answer: ["Hi Sam"],
+  hints: ["\"Sam\" is passed into the parameter name.", "The procedure prints a message.", "\"Hi \" + \"Sam\""],
+  explain: "The procedure is called with the argument \"Sam\" and prints <code>Hi Sam</code>. It does not return anything." },
+
+{ topic: "subroutines", level: 1, type: "mc",
+  q: "What is a return value?",
+  options: [
+    "The value a function sends back to the code that called it",
+    "The first parameter of a sub-routine",
+    "A value typed in by the user",
+    "The value of a variable before the program starts"],
+  answer: 0,
+  hints: ["It is linked to the keyword return.", "Only functions have one.", "In x = double(3), it is what ends up in x."],
+  explain: "The return value is passed back to the calling code, where it can be stored, printed or used in a calculation." },
+
+{ topic: "subroutines", level: 1, type: "text",
+  q: "Type the missing keyword.",
+  code: `function square(n)\n    ___ n * n\nendfunction`,
+  answer: ["return"],
+  hints: ["The function must send a value back.", "This keyword ends the function and gives back a value.", "It begins with 'r'."],
+  explain: "<code>return</code> sends the value of n * n back to the calling code." },
+
+{ topic: "subroutines", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `function f(x)\n    if x > 10 then\n        return x - 10\n    else\n        return x + 10\n    endif\nendfunction\n\nprint(f(f(15)))`,
+  answer: ["15"],
+  hints: ["Work from the inside out.", "f(15): 15 > 10, so it returns 5.", "Now work out f(5)."],
+  explain: "f(15) returns 5, and f(5) returns 15. The return value of one call is used as the argument of the next." },
+
+{ topic: "subroutines", level: 2, type: "mc",
+  q: "Which statement best describes a local variable?",
+  options: [
+    "It is declared inside a sub-routine, can only be used there and only exists while the sub-routine runs",
+    "It can be used anywhere in the program",
+    "It keeps its value between every call",
+    "It must be declared as a constant"],
+  answer: 0,
+  hints: ["Think about scope.", "Where is it declared?", "It is created when the sub-routine starts and lost when it ends."],
+  explain: "A local variable's scope is the sub-routine it is declared in. This prevents accidental changes elsewhere and lets the same name be reused safely." },
+
+{ topic: "subroutines", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `procedure change(a:byVal, b:byRef)\n    a = a + 1\n    b = b + 1\nendprocedure\n\nx = 5\ny = 5\nchange(x, y)\nprint(x + y)`,
+  answer: ["11"],
+  hints: ["byVal passes a copy. byRef passes a reference to the original.", "Changing a does not affect x.", "Changing b does change y."],
+  explain: "x stays 5 because a is a copy. y becomes 6 because b refers to y. So 5 + 6 = 11." },
+
+{ topic: "subroutines", level: 2, type: "mc",
+  q: "Why do programmers try to avoid global variables?",
+  options: [
+    "They can be changed from anywhere, which makes errors harder to trace and sub-routines harder to reuse",
+    "They cannot store strings",
+    "They are deleted after each sub-routine ends",
+    "They make the program impossible to compile"],
+  answer: 0,
+  hints: ["Think about where a global variable can be changed.", "If a value is wrong, how many places might have changed it?", "Also think about memory: globals exist for the whole run."],
+  explain: "Globals can be changed by any part of the program, making bugs hard to find. They also stay in memory for the whole run and tie sub-routines to the rest of the code." },
+
+{ topic: "subroutines", level: 2, type: "text",
+  q: "What is output when this code runs?",
+  code: `function sumTo(n)\n    total = 0\n    for i = 1 to n\n        total = total + i\n    next i\n    return total\nendfunction\n\nprint(sumTo(3) + sumTo(2))`,
+  answer: ["9"],
+  hints: ["Work out each call separately.", "sumTo(3) = 1 + 2 + 3.", "sumTo(2) = 1 + 2."],
+  explain: "sumTo(3) returns 6 and sumTo(2) returns 3, so 9 is printed. total is local, so it restarts at 0 on each call." },
+
+{ topic: "subroutines", level: 2, type: "mc",
+  q: "What does passing a parameter by reference (byRef) mean?",
+  options: [
+    "The memory address of the original variable is passed, so changes inside the sub-routine affect the original",
+    "A copy of the value is passed, so the original is never changed",
+    "The parameter becomes a constant",
+    "The sub-routine must return the value"],
+  answer: 0,
+  hints: ["Reference means 'points to'.", "It is the opposite of byVal.", "The sub-routine works on the original, not a copy."],
+  explain: "byRef passes the location of the original data, so changes made inside the sub-routine remain afterwards. byVal passes a copy." }
+];
+
+const GLOSSARY = [
+  { group: "Variables, constants and data types", terms: [
+    ["Variable", "A named location in memory that stores a value which can change while the program runs.", "score = score + 1 updates the value stored in score."],
+    ["Constant", "A named value that cannot change while the program runs.", "const VAT = 0.2 is used everywhere VAT is needed, so a rate change is made in one place."],
+    ["Identifier", "The name given to a variable, constant, array or sub-routine.", "totalScore is a meaningful identifier, x is not."],
+    ["Assignment", "Giving a variable a value using =.", "name = \"Ada\" stores the string Ada in name."],
+    ["Data type", "The kind of data a value is, which decides what can be done with it.", "Integer (5), real (3.75), Boolean (True), character ('A'), string (\"Hello\")."],
+    ["Casting", "Converting a value from one data type to another.", "int(\"12\") gives 12, str(42) gives \"42\"."]
+  ]},
+  { group: "Input, output and calculations", terms: [
+    ["Input", "Data entered into a program, usually by the user.", "age = int(input(\"Age? \")) reads text and casts it to an integer."],
+    ["Output", "Data sent out by the program, for example displayed on screen.", "print(\"Total: \" + str(total))"],
+    ["Concatenation", "Joining strings together end to end.", "\"Hello \" + \"Ada\" gives \"Hello Ada\"."],
+    ["MOD", "Gives the remainder after division.", "17 MOD 5 = 2. num MOD 2 == 0 tests for an even number."],
+    ["DIV", "Integer division: the whole number of times one number goes into another.", "17 DIV 5 = 3. seconds DIV 60 gives whole minutes."],
+    ["Exponentiation", "Raising a number to a power, using ^.", "2 ^ 4 = 16."]
+  ]},
+  { group: "Program constructs", terms: [
+    ["Sequence", "Instructions carried out one after another in order.", "Every program runs line by line unless selection or iteration changes the flow."],
+    ["Selection", "Choosing which code to run based on a condition.", "if mark >= 70 then print(\"A\") endif"],
+    ["Condition", "An expression that evaluates to True or False.", "age >= 13 AND age <= 19"],
+    ["Boolean operators", "AND, OR and NOT, used to combine or reverse conditions.", "AND needs both True, OR needs at least one True, NOT reverses the result."],
+    ["Iteration", "Repeating a block of code.", "Looping through every item in an array."],
+    ["Count-controlled loop", "A loop that repeats a set number of times (FOR).", "for i = 1 to 10 ... next i runs 10 times."],
+    ["Condition-controlled loop", "A loop that repeats until or while a condition is met (WHILE, DO UNTIL).", "Asking for a password until it is correct."],
+    ["Pre-condition loop (WHILE)", "Checks its condition before each pass, so it may run zero times.", "while x < 5 does nothing if x starts at 10."],
+    ["Post-condition loop (DO UNTIL)", "Checks its condition after each pass, so it always runs at least once.", "A menu that must be shown at least once."],
+    ["Nesting", "Placing one construct inside another.", "An IF inside a FOR loop, or a loop inside a loop to process a grid."]
+  ]},
+  { group: "Arrays", terms: [
+    ["Array", "A static data structure holding items of the same data type under one identifier.", "array scores[30] stores 30 test scores."],
+    ["Index", "The position number used to access an item in an array, starting at 0.", "scores[0] is the first item."],
+    ["2D array", "An array of arrays, accessed with two indexes such as row and column.", "board[2, 3] for a game board."],
+    ["Index out of range", "An error caused by using an index outside the array's bounds.", "Using names[5] when names has 5 items (indexes 0 to 4)."],
+    ["Static data structure", "A structure whose size is fixed when it is declared.", "An array of 10 elements cannot grow to 11."]
+  ]},
+  { group: "Sub-routines", terms: [
+    ["Sub-routine", "A named block of code that performs a specific task and can be called when needed.", "Breaking a game into setupBoard(), takeTurn() and checkWinner()."],
+    ["Function", "A sub-routine that returns a value.", "x = square(4) stores 16 in x."],
+    ["Procedure", "A sub-routine that does not return a value.", "greet(\"Sam\") prints a message."],
+    ["Parameter", "A variable in a sub-routine's definition that receives data.", "In function area(w, h), w and h are parameters."],
+    ["Argument", "The actual value passed to a sub-routine when it is called.", "In area(4, 5), 4 and 5 are arguments."],
+    ["Return value", "The value a function sends back to the calling code.", "return n * 2"],
+    ["Local variable", "A variable declared inside a sub-routine that only exists and can only be used there.", "total inside sumTo() restarts at 0 on every call."],
+    ["Global variable", "A variable that can be accessed from anywhere in the program.", "global highScore can be changed by any sub-routine, which makes bugs harder to trace."],
+    ["Scope", "The part of a program where a variable can be used.", "A local variable's scope is its sub-routine."],
+    ["By value (byVal)", "A copy of the data is passed, so the original is not changed.", "procedure p(a:byVal) cannot change the caller's variable."],
+    ["By reference (byRef)", "The address of the original data is passed, so changes affect the original.", "procedure p(b:byRef) can update the caller's variable."]
+  ]}
+];
+</script>
+
+<!-- ============ GAME ENGINE ============ -->
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const LEVEL_POINTS = { 1: 10, 2: 15 };
+  const STORE_KEY = "codeQuest221Settings";
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  // Allows <code> and <b> tags written in the bank; everything else is plain text.
+  function rich(s) {
+    return String(s);
+  }
+  const KW = new Set(["if","then","elseif","else","endif","for","to","step","next","while","endwhile","do","until",
+    "switch","case","default","endswitch","function","endfunction","procedure","endprocedure","return","array",
+    "const","global","AND","OR","NOT","MOD","DIV","byVal","byRef","True","False"]);
+  const BI = new Set(["print","input","str","int","float","real","length"]);
+  function highlight(code) {
+    const re = /(\/\/.*$)|("[^"]*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|([\s\S])/gm;
+    return code.replace(re, (m, cmt, str, num, word) => {
+      if (cmt) return '<span class="cmt">' + esc(m) + "</span>";
+      if (str) return '<span class="str">' + esc(m) + "</span>";
+      if (num) return '<span class="num">' + esc(m) + "</span>";
+      if (word) {
+        if (KW.has(word)) return '<span class="kw">' + esc(m) + "</span>";
+        if (BI.has(word)) return '<span class="bi">' + esc(m) + "</span>";
+      }
+      return esc(m);
+    });
+  }
+  function shuffle(a) {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+  }
+  function norm(s) {
+    return String(s).toLowerCase()
+      .replace(/["'\u201c\u201d\u2018\u2019]/g, "")
+      .replace(/,/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  function isNum(s) { return s !== "" && !isNaN(Number(s)); }
+  function matches(given, accepted) {
+    const g = norm(given);
+    if (!g) return false;
+    return accepted.some(a => {
+      const n = norm(a);
+      if (g === n) return true;
+      if (isNum(g) && isNum(n) && Number(g) === Number(n)) return true;
+      return false;
+    });
+  }
+  function topicName(id) { const t = TOPICS.find(t => t.id === id); return t ? t.name : id; }
+  function show(screen) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    $("screen-" + screen).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- settings ---------- */
+  function buildTopicList() {
+    $("topicList").innerHTML = TOPICS.map(t =>
+      '<label class="choice"><input type="checkbox" name="topic" value="' + t.id + '" checked> ' + esc(t.name) + "</label>"
+    ).join("");
+  }
+  function buildTeamNames(saved) {
+    const n = Number($("numTeams").value);
+    const box = $("teamNames");
+    if (n === 1) { box.innerHTML = ""; return; }
+    const existing = Array.from(box.querySelectorAll("input")).map(i => i.value);
+    let html = "";
+    for (let i = 0; i < n; i++) {
+      const val = (saved && saved[i]) || existing[i] || ("Team " + (i + 1));
+      html += '<input type="text" aria-label="Name of team ' + (i + 1) + '" value="' + esc(val) + '" maxlength="24">';
+    }
+    box.innerHTML = html;
+  }
+  function readSettings() {
+    return {
+      level: document.querySelector('input[name="level"]:checked').value,
+      topics: Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(c => c.value),
+      numQ: $("numQ").value,
+      numTeams: Number($("numTeams").value),
+      teamNames: Array.from($("teamNames").querySelectorAll("input")).map(i => i.value.trim() || "Team"),
+      hintCost: Number($("hintCost").value),
+      secondTry: $("secondTry").checked
+    };
+  }
+  function saveSettings(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} }
+  function loadSettings() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) {}
+    if (!s) return;
+    const lv = document.querySelector('input[name="level"][value="' + s.level + '"]');
+    if (lv) lv.checked = true;
+    if (Array.isArray(s.topics)) {
+      document.querySelectorAll('input[name="topic"]').forEach(c => { c.checked = s.topics.includes(c.value); });
+    }
+    if (s.numQ) $("numQ").value = s.numQ;
+    if (s.numTeams) $("numTeams").value = String(s.numTeams);
+    if (s.hintCost) $("hintCost").value = String(s.hintCost);
+    if (typeof s.secondTry === "boolean") $("secondTry").checked = s.secondTry;
+    buildTeamNames(s.teamNames);
+  }
+  function filterPool(s) {
+    return QUESTIONS.filter(q => s.topics.includes(q.topic) &&
+      (s.level === "mix" || String(q.level) === s.level));
+  }
+  function updatePoolInfo() {
+    const s = readSettings();
+    const n = filterPool(s).length;
+    $("poolInfo").textContent = n + " question" + (n === 1 ? "" : "s") + " available with these choices.";
+  }
+
+  /* ---------- game state ---------- */
+  let S = null;      // settings for this game
+  let G = null;      // game state
+
+  function startGame(settings) {
+    S = settings;
+    const pool = filterPool(S);
+    if (!pool.length) { alert("Please choose at least one topic."); return; }
+    const want = S.numQ === "all" ? pool.length : Math.min(Number(S.numQ), pool.length);
+    const list = shuffle(pool).slice(0, want).map(q => {
+      if (q.type !== "mc") return q;
+      // shuffle the options but keep track of the correct one
+      const order = shuffle(q.options.map((_, i) => i));
+      return Object.assign({}, q, {
+        options: order.map(i => q.options[i]),
+        answer: order.indexOf(q.answer)
+      });
+    });
+    const teams = S.numTeams === 1
+      ? [{ name: "Score", score: 0 }]
+      : S.teamNames.slice(0, S.numTeams).map(n => ({ name: n, score: 0 }));
+    G = { list, idx: 0, teams, results: [], cur: null };
+    show("game");
+    renderQuestion();
+  }
+
+  function currentTeam() { return G.idx % G.teams.length; }
+  function pointsNow() {
+    const q = G.list[G.idx];
+    const base = LEVEL_POINTS[q.level];
+    let p = Math.max(0, base - G.cur.hints * S.hintCost);
+    if (G.cur.wrongOnce) p = Math.floor(p / 2);
+    return p;
+  }
+
+  function renderScoreboard() {
+    const t = currentTeam();
+    $("scoreboard").innerHTML = G.teams.map((tm, i) => {
+      const label = G.teams.length === 1 ? "Score: " + tm.score : esc(tm.name) + ": " + tm.score;
+      return '<span class="scorechip' + (G.teams.length > 1 && i === t && !G.cur.done ? " turn" : "") + '">' + label + "</span>";
+    }).join("");
+  }
+
+  function renderWorth() {
+    const el = $("qWorth");
+    if (el) el.textContent = "Worth " + pointsNow() + " point" + (pointsNow() === 1 ? "" : "s");
+  }
+
+  function renderQuestion() {
+    const q = G.list[G.idx];
+    G.cur = { hints: 0, wrongOnce: false, done: false, selected: null, eliminated: [] };
+
+    $("progressText").textContent = "Question " + (G.idx + 1) + " of " + G.list.length;
+    $("progressBar").style.width = (G.idx / G.list.length * 100) + "%";
+
+    if (G.teams.length > 1) {
+      $("turnBanner").style.display = "block";
+      $("turnBanner").textContent = G.teams[currentTeam()].name + ", it is your turn";
+    } else {
+      $("turnBanner").style.display = "none";
+    }
+
+    $("qTags").innerHTML =
+      '<span class="tag">' + esc(topicName(q.topic)) + "</span>" +
+      '<span class="tag l' + q.level + '">' + (q.level === 1 ? "Year 12 core" : "Year 13 challenge") + "</span>" +
+      '<span class="worth" id="qWorth"></span>';
+    $("qPrompt").innerHTML = rich(q.q);
+
+    if (q.code) { $("qCode").style.display = "block"; $("qCode").innerHTML = highlight(q.code); }
+    else { $("qCode").style.display = "none"; $("qCode").innerHTML = ""; }
+
+    const ans = $("qAnswer");
+    if (q.type === "mc") {
+      ans.innerHTML = '<div class="options">' + q.options.map((o, i) =>
+        '<button class="opt" data-i="' + i + '"><span class="letter">' + "ABCD"[i] + "</span><span>" + rich(o) + "</span></button>"
+      ).join("") + "</div>";
+      ans.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => selectOption(Number(b.dataset.i))));
+    } else {
+      ans.innerHTML = '<input type="text" class="text-answer" id="textAns" autocomplete="off" spellcheck="false" placeholder="Type your answer here" aria-label="Your answer">';
+      setTimeout(() => { const t = $("textAns"); if (t) t.focus(); }, 50);
+    }
+
+    $("qHints").innerHTML = "";
+    const fb = $("qFeedback"); fb.className = "feedback"; fb.innerHTML = "";
+    $("btnCheck").style.display = ""; $("btnCheck").disabled = false;
+    $("btnNext").style.display = "none";
+    updateHintButton();
+    renderWorth();
+    renderScoreboard();
+  }
+
+  function selectOption(i) {
+    if (G.cur.done || G.cur.eliminated.includes(i)) return;
+    G.cur.selected = i;
+    document.querySelectorAll(".opt").forEach(b => {
+      b.classList.toggle("selected", Number(b.dataset.i) === i);
+    });
+  }
+
+  function updateHintButton() {
+    const q = G.list[G.idx];
+    const btn = $("btnHint");
+    const total = q.hints.length;
+    if (G.cur.done || G.cur.hints >= total) {
+      btn.disabled = true;
+      btn.textContent = G.cur.hints >= total ? "No more hints" : "Show hint";
+    } else {
+      btn.disabled = false;
+      btn.textContent = "Show hint " + (G.cur.hints + 1) + " of " + total + " (minus " + S.hintCost + ")";
+    }
+  }
+
+  function showHint() {
+    const q = G.list[G.idx];
+    if (G.cur.done || G.cur.hints >= q.hints.length) return;
+    const h = q.hints[G.cur.hints];
+    G.cur.hints++;
+    const div = document.createElement("div");
+    div.className = "hint";
+    div.innerHTML = "<b>Hint " + G.cur.hints + ":</b> " + rich(h);
+    $("qHints").appendChild(div);
+    updateHintButton();
+    renderWorth();
+  }
+
+  function check() {
+    const q = G.list[G.idx];
+    if (G.cur.done) return;
+    let given, correct;
+    if (q.type === "mc") {
+      if (G.cur.selected === null) { flash("Choose an answer first."); return; }
+      given = G.cur.selected;
+      correct = given === q.answer;
+    } else {
+      given = $("textAns").value;
+      if (!given.trim()) { flash("Type an answer first."); return; }
+      correct = matches(given, q.answer);
+    }
+
+    if (!correct && S.secondTry && !G.cur.wrongOnce) {
+      G.cur.wrongOnce = true;
+      const fb = $("qFeedback");
+      fb.className = "feedback show retry";
+      fb.innerHTML = '<div class="head">Not quite. Have one more try.</div>This attempt is worth half of the points left. You can still use hints.';
+      if (q.type === "mc") {
+        G.cur.eliminated.push(given);
+        const b = document.querySelector('.opt[data-i="' + given + '"]');
+        b.classList.remove("selected"); b.classList.add("wrong"); b.disabled = true;
+        G.cur.selected = null;
+      } else {
+        const t = $("textAns"); t.select(); t.focus();
+      }
+      renderWorth();
+      return;
+    }
+    finish(correct, given);
+  }
+
+  function finish(correct, given) {
+    const q = G.list[G.idx];
+    G.cur.done = true;
+    const pts = correct ? pointsNow() : 0;
+    const team = currentTeam();
+    G.teams[team].score += pts;
+    G.results.push({
+      q, team, correct, pts, max: LEVEL_POINTS[q.level], hints: G.cur.hints,
+      given: q.type === "mc" ? q.options[given] : esc(given)
+    });
+
+    if (q.type === "mc") {
+      document.querySelectorAll(".opt").forEach(b => {
+        const i = Number(b.dataset.i);
+        b.disabled = true;
+        b.classList.remove("selected");
+        if (i === q.answer) b.classList.add("correct");
+        else if (i === given) b.classList.add("wrong");
+      });
+    } else {
+      $("textAns").disabled = true;
+    }
+
+    const correctText = q.type === "mc" ? q.options[q.answer] : esc(q.answer[0]);
+    const fb = $("qFeedback");
+    fb.className = "feedback show " + (correct ? "good" : "bad");
+    fb.innerHTML = (correct
+      ? '<div class="head">Correct! +' + pts + " point" + (pts === 1 ? "" : "s") + "</div>"
+      : '<div class="head">Not this time. 0 points.</div><p><b>Correct answer:</b> ' + correctText + "</p>")
+      + "<p>" + rich(q.explain) + "</p>";
+
+    $("btnCheck").style.display = "none";
+    $("btnNext").style.display = "";
+    $("btnNext").textContent = G.idx === G.list.length - 1 ? "See results" : "Next question";
+    $("btnNext").focus();
+    updateHintButton();
+    renderScoreboard();
+    $("qWorth").textContent = correct ? "Scored " + pts : "Scored 0";
+  }
+
+  function flash(msg) {
+    const fb = $("qFeedback");
+    fb.className = "feedback show retry";
+    fb.innerHTML = '<div class="head">' + esc(msg) + "</div>";
+  }
+
+  function next() {
+    if (!G.cur.done) return;
+    if (G.idx < G.list.length - 1) { G.idx++; renderQuestion(); }
+    else endGame();
+  }
+
+  /* ---------- results ---------- */
+  function endGame() {
+    $("progressBar").style.width = "100%";
+    const R = G.results;
+    const total = R.reduce((a, r) => a + r.pts, 0);
+    const max = R.reduce((a, r) => a + r.max, 0);
+    const right = R.filter(r => r.correct).length;
+    const hints = R.reduce((a, r) => a + r.hints, 0);
+    const pct = max ? Math.round(total / max * 100) : 0;
+    const msg = pct >= 85 ? "Outstanding work." : pct >= 65 ? "Great effort. A few areas to polish."
+      : pct >= 40 ? "Good start. Use the review below to target your revision." : "Keep going. Work through the review and the key terms, then try again.";
+
+    $("endSummary").innerHTML =
+      '<div class="bigscore">' + total + " / " + max + "</div>" +
+      "<p><b>" + pct + "%</b> of the available points</p>" +
+      "<p>" + right + " of " + R.length + " answered correctly &middot; " + hints + " hint" + (hints === 1 ? "" : "s") + " used</p>" +
+      "<p>" + msg + "</p>";
+
+    if (G.teams.length > 1) {
+      const ranked = G.teams.map((t, i) => Object.assign({ i }, t)).sort((a, b) => b.score - a.score);
+      const top = ranked[0].score;
+      const winners = ranked.filter(t => t.score === top).map(t => esc(t.name));
+      $("endTeams").innerHTML = "<h3 style='margin-top:0'>Leaderboard</h3>" +
+        "<p><b>" + (winners.length > 1 ? "Draw between " + winners.join(" and ") : winners[0] + " wins!") + "</b></p>" +
+        '<ol class="podium">' + ranked.map(t => {
+          const tr = R.filter(r => r.team === t.i);
+          return "<li>" + esc(t.name) + ": <b>" + t.score + "</b> points (" + tr.filter(r => r.correct).length + " of " + tr.length + " correct)</li>";
+        }).join("") + "</ol>";
+      $("endTeams").style.display = "";
+    } else {
+      $("endTeams").innerHTML = "<h3 style='margin-top:0'>Next steps</h3><ul>" +
+        "<li>Look at the topics with the lowest scores below.</li>" +
+        "<li>Read the explanations in the review section.</li>" +
+        "<li>Check the key terms page for definitions.</li>" +
+        "<li>Play again: questions and option orders are shuffled each time.</li></ul>";
+    }
+
+    const rows = TOPICS.map(t => {
+      const tr = R.filter(r => r.q.topic === t.id);
+      if (!tr.length) return "";
+      const p = tr.reduce((a, r) => a + r.pts, 0), m = tr.reduce((a, r) => a + r.max, 0);
+      const pc = Math.round(p / m * 100);
+      return "<tr><td>" + esc(t.name) + "</td><td>" + tr.filter(r => r.correct).length + " / " + tr.length + "</td><td>" + p + " / " + m +
+        '</td><td><div class="meter"><div style="width:' + pc + '%"></div></div></td></tr>';
+    }).join("");
+    $("endTopics").innerHTML = "<table><thead><tr><th>Topic</th><th>Correct</th><th>Points</th><th>Score</th></tr></thead><tbody>" + rows + "</tbody></table>";
+
+    const revisit = R.filter(r => !r.correct || r.hints > 0);
+    $("endReview").innerHTML = revisit.length ? revisit.map(r => {
+      const q = r.q;
+      const correctText = q.type === "mc" ? q.options[q.answer] : esc(q.answer[0]);
+      return '<div class="review-item">' +
+        "<p><b>" + rich(q.q) + "</b> <span class='tag'>" + esc(topicName(q.topic)) + "</span></p>" +
+        (q.code ? '<pre class="code">' + highlight(q.code) + "</pre>" : "") +
+        "<p>" + (r.correct ? '<span class="ok">Correct</span> with ' + r.hints + " hint" + (r.hints === 1 ? "" : "s") + " (" + r.pts + " of " + r.max + " points)"
+          : '<span class="no">Incorrect.</span> Answer given: ' + r.given + "<br><b>Correct answer:</b> " + correctText) + "</p>" +
+        "<p>" + rich(q.explain) + "</p></div>";
+    }).join("") : "<p>Every question was answered correctly with no hints. Brilliant!</p>";
+
+    show("end");
+  }
+
+  /* ---------- glossary ---------- */
+  function renderGlossary(filter) {
+    const f = (filter || "").toLowerCase().trim();
+    let html = "";
+    GLOSSARY.forEach(g => {
+      const terms = g.terms.filter(t => !f || t.join(" ").toLowerCase().includes(f));
+      if (!terms.length) return;
+      html += '<div class="gloss-group"><h3>' + esc(g.group) + '</h3><dl class="gloss">' +
+        terms.map(t => "<dt>" + esc(t[0]) + "</dt><dd>" + esc(t[1]) +
+          '<span class="prac">In practice: ' + esc(t[2]) + "</span></dd>").join("") + "</dl></div>";
+    });
+    $("glossBody").innerHTML = html || "<p>No matching terms.</p>";
+  }
+
+  /* ---------- wiring ---------- */
+  buildTopicList();
+  buildTeamNames();
+  loadSettings();
+  updatePoolInfo();
+
+  document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener("change", updatePoolInfo));
+  $("topicList").addEventListener("change", updatePoolInfo);
+  $("btnAllTopics").addEventListener("click", () => { document.querySelectorAll('input[name="topic"]').forEach(c => c.checked = true); updatePoolInfo(); });
+  $("btnNoTopics").addEventListener("click", () => { document.querySelectorAll('input[name="topic"]').forEach(c => c.checked = false); updatePoolInfo(); });
+  $("numTeams").addEventListener("change", () => buildTeamNames());
+
+  $("btnStart").addEventListener("click", () => {
+    const s = readSettings();
+    if (!s.topics.length) { alert("Please choose at least one topic."); return; }
+    saveSettings(s);
+    startGame(s);
+  });
+  $("btnHint").addEventListener("click", showHint);
+  $("btnCheck").addEventListener("click", check);
+  $("btnNext").addEventListener("click", next);
+  $("btnQuit").addEventListener("click", () => {
+    if (!G.results.length) { show("start"); return; }
+    if (confirm("End the game now and see the results so far?")) endGame();
+  });
+  $("btnAgain").addEventListener("click", () => startGame(S));
+  $("btnMenu").addEventListener("click", () => show("start"));
+  $("btnPrint").addEventListener("click", () => window.print());
+  $("btnHome").addEventListener("click", () => {
+    if ($("screen-game").classList.contains("active") && G && !confirm("Leave this game and return to the menu?")) return;
+    show("start"); updatePoolInfo();
+  });
+  $("btnGlossary").addEventListener("click", () => { renderGlossary(""); $("glossSearch").value = ""; show("glossary"); });
+  $("btnGlossBack").addEventListener("click", () => show("start"));
+  $("glossSearch").addEventListener("input", e => renderGlossary(e.target.value));
+
+  document.addEventListener("keydown", e => {
+    if (!$("screen-game").classList.contains("active") || !G) return;
+    const inText = e.target && e.target.id === "textAns";
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (G.cur.done) next(); else check();
+      return;
+    }
+    if (inText) return;
+    const q = G.list[G.idx];
+    if (q.type === "mc" && ["1","2","3","4"].includes(e.key)) {
+      const i = Number(e.key) - 1;
+      if (i < q.options.length) selectOption(i);
+    } else if (e.key === "h" || e.key === "H") {
+      showHint();
+    }
+  });
+})();
+</script>
+</body>
+</html>
